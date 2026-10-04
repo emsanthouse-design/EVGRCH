@@ -234,3 +234,64 @@ export function useLatestRun(workspaceId: string | undefined) {
     },
   })
 }
+
+// ----- search (phase 2) -------------------------------------------------------
+export function useSerpData(workspaceId: string | undefined, queryIds: string[] | undefined) {
+  return useQuery({
+    queryKey: ['serp', workspaceId, queryIds?.length ?? 0],
+    enabled: !!workspaceId && !!queryIds && queryIds.length > 0,
+    queryFn: async () => {
+      const [latest, previous] = await Promise.all([
+        unwrap(supabase.from('latest_serp_results').select('*').in('query_id', queryIds!)),
+        unwrap(supabase.from('previous_serp_results').select('*').in('query_id', queryIds!)),
+      ])
+      return { latest, previous }
+    },
+  })
+}
+
+export function useRunStatus(workspaceId: string | undefined) {
+  return useQuery({
+    queryKey: ['latest-run', workspaceId],
+    enabled: !!workspaceId,
+    refetchInterval: (q) => {
+      const s = q.state.data?.status
+      return s === 'queued' || s === 'running' ? 4000 : false
+    },
+    queryFn: async () => {
+      const rows = await unwrap(
+        supabase.from('collection_runs').select('*').eq('workspace_id', workspaceId!).order('created_at', { ascending: false }).limit(1),
+      )
+      return rows[0] ?? null
+    },
+  })
+}
+
+export function useRefreshNow(workspaceId: string | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data: s } = await supabase.auth.getSession()
+      const token = s.session?.access_token
+      if (!token) throw new Error('Not signed in')
+      const res = await fetch('/api/refresh', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workspaceId }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: string; runId?: string }
+      if (!res.ok) throw new Error(body.error ?? `Refresh failed (HTTP ${res.status})`)
+      return body
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['latest-run', workspaceId] })
+    },
+  })
+}
+
+export function invalidateAfterRun(qc: ReturnType<typeof useQueryClient>, workspaceId: string | undefined) {
+  qc.invalidateQueries({ queryKey: ['scorecard', workspaceId] })
+  qc.invalidateQueries({ queryKey: ['serp', workspaceId] })
+  qc.invalidateQueries({ queryKey: ['companies', workspaceId] })
+  qc.invalidateQueries({ queryKey: ['history'] })
+}

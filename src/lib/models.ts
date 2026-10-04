@@ -55,3 +55,5 @@ export function platformLabel(p: string | null | undefined): string {
   if (!p) return ''
   return PLATFORM_LABEL[p] ?? p.charAt(0).toUpperCase() + p.slice(1)
 }
+
+export type SerpResultView = Views['latest_serp_results']['Row']

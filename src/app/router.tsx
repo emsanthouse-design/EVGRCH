@@ -12,6 +12,7 @@ import { UsersSettings } from '../features/settings/UsersSettings'
 import { useWorkspaces } from '../lib/hooks'
 import { Spinner, EmptyState } from '../components/ui'
 import { ComingSoon } from '../features/ComingSoon'
+import { SearchPage } from '../features/search/SearchPage'
 
 function RequireAuth() {
   const { loading, session, profile } = useAuth()
@@ -59,7 +60,7 @@ const routes: RouteObject[] = [
         element: <Layout />,
         children: [
           { index: true, element: <ScorecardPage /> },
-          { path: 'search', element: <ComingSoon title="Search view" phase={2} body="Query-by-query rankings arrive with the SERP collector in Phase 2." /> },
+          { path: 'search', element: <SearchPage /> },
           { path: 'companies', element: <ComingSoon title="Company detail" phase={3} body="Per-company history with trend lines arrives in Phase 3." /> },
           { path: 'companies/:companyId', element: <ComingSoon title="Company detail" phase={3} body="Per-company history with trend lines arrives in Phase 3." /> },
           { path: 'entry', element: <DataEntryPage /> },

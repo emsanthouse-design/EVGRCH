@@ -47,7 +47,7 @@ interface DfsResponse {
 }
 
 export function dataForSeoProvider(login: string, password: string, fetchImpl: typeof fetch = fetch): SerpProvider {
-  const auth = 'Basic ' + Buffer.from(`${login}:${password}`).toString('base64')
+  const auth = 'Basic ' + btoa(`${login}:${password}`)
   return {
     key: 'dataforseo',
     async search({ phrase, location, device, language, depth = 20 }) {

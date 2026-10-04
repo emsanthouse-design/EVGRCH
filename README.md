@@ -32,8 +32,21 @@ Netlify functions run locally with `npx netlify dev` (needs the Netlify CLI and 
 
 Browser (public, prefixed `VITE_`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (the `sb_publishable_…` key).
 
-Functions only (never shipped to the browser): `SUPABASE_URL`, `SUPABASE_ADMIN_KEY`,
-`DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `GOOGLE_MAPS_API_KEY`, `PAGESPEED_API_KEY`.
+Functions only (never shipped to the browser): `SUPABASE_URL`, `SUPABASE_ADMIN_KEY` (a Supabase
+secret key, `sb_secret_…`), `INTERNAL_SECRET` (any random string), `DATAFORSEO_LOGIN`,
+`DATAFORSEO_PASSWORD`, `GOOGLE_MAPS_API_KEY`, and optionally `PAGESPEED_API_KEY`.
+
+## Collectors and runs (Phase 2)
+
+- `netlify/functions/weekly-scheduled.mts` runs Mondays 10:00 UTC and enqueues one run per workspace
+  with weekly refresh on. `POST /api/refresh` (agency admins) enqueues a manual run, rate-limited by
+  the workspace's cooldown. Both call `collect-background.mts`, which has a 15-minute limit and does
+  the work: company collectors (Google Places, PageSpeed) then the SERP collector (DataForSEO Live
+  Advanced, 20 results, organic + local pack + ads in one call).
+- Results land in `snapshots` (api source), `serp_runs` and `serp_results` with company matching by
+  domain, known profile URL, and Google CID. `collection_runs.summary` records per-collector counts,
+  errors and SERP cost.
+- Unit tests: `npm test` (matching rules and the DataForSEO parser).
 
 ### Supabase one-time setup (dashboard)
 
@@ -67,7 +80,7 @@ Functions only (never shipped to the browser): `SUPABASE_URL`, `SUPABASE_ADMIN_K
 
 ## Phases
 
-1. **Foundation** (this release): schema, RLS, invite-only auth, Settings, Data entry, Scorecard.
-2. **Collectors:** Google Places, PageSpeed, DataForSEO SERP, weekly run, Refresh now, Search view.
+1. **Foundation:** schema, RLS, invite-only auth, Settings, Data entry, Scorecard.
+2. **Collectors** (this release): Google Places, PageSpeed, DataForSEO SERP, weekly run, Refresh now, Search view.
 3. **Reports:** company detail with trends, frozen reports, PDF / CSV / PNG exports.
 4. **Later:** client logins, Instagram collector, actions, client theming.

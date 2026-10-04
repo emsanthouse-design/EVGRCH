@@ -3,7 +3,8 @@ import { Link } from 'react-router'
 import clsx from 'clsx'
 import { AlertTriangle, Minus } from 'lucide-react'
 import { useCurrentWorkspace } from '../../app/Layout'
-import { useCompanies, useMetrics, useScorecard, useLatestRun } from '../../lib/hooks'
+import { useCompanies, useMetrics, useScorecard } from '../../lib/hooks'
+import { RefreshButton } from '../../components/RefreshButton'
 import { AREA_LABEL, AREA_ORDER, type CompanyWithProfiles, type MetricRow, type ScorecardCell, platformLabel } from '../../lib/models'
 import { formatDate, formatDelta, formatValue, relativeDays } from '../../lib/format'
 import { Badge, EmptyState, ErrorNote, PageHeader, Spinner } from '../../components/ui'
@@ -16,7 +17,6 @@ export function ScorecardPage() {
   const companies = useCompanies(ws.id)
   const metrics = useMetrics()
   const cells = useScorecard(ws.id)
-  const latestRun = useLatestRun(ws.id)
 
   const cellMap = useMemo(() => {
     const m = new Map<string, ScorecardCell>()
@@ -56,8 +56,7 @@ export function ScorecardPage() {
           <span>
             {ws.name} against {cos.length - 1} {cos.length - 1 === 1 ? 'company' : 'companies'}.
             {lastManual && <> Manual data last entered {relativeDays(lastManual)}.</>}
-            {lastApi ? <> API data last refreshed {relativeDays(lastApi)}.</> : <> No API data yet (Phase 2).</>}
-            {latestRun.data && <> Last run: {latestRun.data.status}.</>}
+            {lastApi ? <> API data last refreshed {relativeDays(lastApi)}.</> : <> No API data yet.</>}
           </span>
         }
         actions={
@@ -72,9 +71,7 @@ export function ScorecardPage() {
                 <Button variant="secondary" size="sm">Enter data</Button>
               </Link>
             )}
-            <Button size="sm" disabled title="Available in Phase 2 when API collectors are connected">
-              Refresh now
-            </Button>
+            <RefreshButton workspaceId={ws.id} />
           </>
         }
       />

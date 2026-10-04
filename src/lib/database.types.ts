@@ -598,6 +598,82 @@ export type Database = {
       }
     }
     Views: {
+      latest_serp_results: {
+        Row: {
+          captured_at: string | null
+          device: string | null
+          domain: string | null
+          has_local_pack: boolean | null
+          id: number | null
+          match_kind: Database["public"]["Enums"]["match_kind"] | null
+          matched_company_id: string | null
+          place_id: string | null
+          position: number | null
+          provider: string | null
+          query_id: string | null
+          rating: number | null
+          result_type: Database["public"]["Enums"]["result_type"] | null
+          review_count: number | null
+          serp_run_id: string | null
+          title: string | null
+          url: string | null
+        }
+        Relationships: []
+      }
+      previous_serp_results: {
+        Row: {
+          captured_at: string | null
+          device: string | null
+          domain: string | null
+          has_local_pack: boolean | null
+          id: number | null
+          match_kind: Database["public"]["Enums"]["match_kind"] | null
+          matched_company_id: string | null
+          place_id: string | null
+          position: number | null
+          provider: string | null
+          query_id: string | null
+          rating: number | null
+          result_type: Database["public"]["Enums"]["result_type"] | null
+          review_count: number | null
+          serp_run_id: string | null
+          title: string | null
+          url: string | null
+        }
+        Relationships: []
+      }
+      latest_serp_runs: {
+        Row: {
+          captured_at: string | null
+          cost_units: number | null
+          device: string | null
+          has_local_pack: boolean | null
+          id: string | null
+          location: string | null
+          provider: string | null
+          query_id: string | null
+          raw: Json | null
+          run_id: string | null
+          total_organic: number | null
+        }
+        Relationships: []
+      }
+      previous_serp_runs: {
+        Row: {
+          captured_at: string | null
+          cost_units: number | null
+          device: string | null
+          has_local_pack: boolean | null
+          id: string | null
+          location: string | null
+          provider: string | null
+          query_id: string | null
+          raw: Json | null
+          run_id: string | null
+          total_organic: number | null
+        }
+        Relationships: []
+      }
       scorecard_cells: {
         Row: {
           captured_at: string | null
