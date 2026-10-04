@@ -18,6 +18,8 @@ export interface CollectorContext {
   metrics: Metric[]
   env: (name: string) => string | undefined
   log: (msg: string, extra?: Record<string, unknown>) => void
+  /** Collectors call this when they discover a profile identifier (e.g. a Google place ID). */
+  onProfileResolved?: (companyId: string, platform: string, patch: { external_id?: string; url?: string }) => void
 }
 
 export type MetricValue =

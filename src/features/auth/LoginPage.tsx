@@ -17,7 +17,7 @@ export function LoginPage() {
       options: { emailRedirectTo: window.location.origin + '/' },
     })
     if (error) {
-      setError(friendly(error.message))
+      setError(friendly(error.message, error.status))
       setState('error')
     } else {
       setState('sent')
@@ -66,9 +66,11 @@ export function LoginPage() {
   )
 }
 
-function friendly(msg: string): string {
+function friendly(msg: string, status?: number): string {
   if (/not been invited/i.test(msg)) return 'That email address has not been invited.'
   if (/signups not allowed/i.test(msg)) return 'That email address has not been invited.'
+  // Supabase reports the database-level invite rejection as a generic 500 "unexpected_failure".
+  if (status === 500 || /unexpected_failure|database error/i.test(msg)) return 'That email address has not been invited. Ask an agency admin to add it.'
   if (/rate limit/i.test(msg)) return 'Too many sign-in emails were sent recently. Try again in a little while.'
   return msg
 }
