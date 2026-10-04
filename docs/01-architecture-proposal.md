@@ -10,13 +10,13 @@ Companion file: `docs/schema-draft.sql` (full DDL, not yet applied to Supabase).
 | # | Decision | My recommendation | Why it matters |
 |---|---|---|---|
 | 1 | Front-end framework | **Vite + React 19 + TypeScript**, static build | See §3. Easy to change now, painful later. |
-| 2 | SERP provider | See §6 (cost table) | Only paid API in the build. Billed per query. |
+| 2 | SERP provider | **DataForSEO** (pay as you go, ~$0.40/month at our volume); runner-up SerpApi free tier | Only paid API in the build. Billed per query. See §6.8. |
 | 3 | Who is an "agency admin" | A **global** flag on the user, not a per-workspace role | Lets 3 EVG staff see every client workspace without re-inviting them per client. |
 | 4 | Search device for rankings | **Desktop** by default, as a workspace setting | Local pack composition differs by device; billing is per device run. |
 | 5 | Supabase project + Netlify site names | `evg-presence-tracker` for both, in org **emsanthouse** / team **emsanthouse** | Both accounts already exist; the new project is separate from your "Horse Racing Names" project. |
 | 6 | Company profile URLs | Confirm the list in §8 | Seed data for the RCH workspace. |
 
-Everything else below is a recommendation I'll proceed with unless you object.
+Two more decisions (7 and 8) appear at the end of §6; they came out of the API terms research. Everything else below is a recommendation I'll proceed with unless you object.
 
 ---
 
@@ -123,8 +123,8 @@ Collectors in scope per phase:
 | `google_places` | 2 | google_rating, google_review_count, google_newest_review_date |
 | `pagespeed` | 2 | mobile_performance_score (+ desktop score and CWV fields stored in `raw`) |
 | `serp` | 2 | rankings (not a snapshot metric; written to `serp_*` tables), plus derived `branded_top_result_owner` for the client |
-| `yelp` | 4 | yelp_rating, yelp_review_count |
-| `meta` | 4 | ig_followers, ig_posts_30d, ig_last_post_date, fb_followers, fb_posts_30d, fb_last_post_date (if access rules allow; see §6) |
+| `yelp` | dropped | Yelp terms forbid storing data past 24 h and the plan minimum is $229/mo; stays manual (§6.3) |
+| `meta` | 4 | ig_followers, ig_posts_30d, ig_last_post_date via Instagram Business Discovery using EVG's own IG account (§6.4). Facebook metrics stay manual. |
 
 ---
 
@@ -159,7 +159,7 @@ Full DDL is in `docs/schema-draft.sql`. Summary of the changes to your draft:
 |---|---|---|---|---|
 | reviews | google_rating | number (stars) | api · google_places | secondary |
 | reviews | google_review_count | integer | api · google_places | secondary |
-| reviews | google_newest_review_date | date | api · google_places | **primary** |
+| reviews | google_newest_review_date | date | manual (see decision 8) | **primary** |
 | reviews | google_response_rate | percent | manual | **primary** |
 | reviews | yelp_rating, yelp_review_count | number, integer | manual | secondary |
 | reviews | yelp_response_rate | percent | manual | primary |
@@ -183,7 +183,76 @@ The Listings platform list (`google, yelp, houzz, facebook, bbb`) is my guess; t
 
 ## 6. External APIs: terms, quotas, pricing (checked 2026-10-04)
 
-> Filled in from today's research in §6 of the companion summary; see the "API research" section appended below.
+Everything below was checked today against the providers' current pages via web search. The sandbox could not open the official pages directly, so I'm quoting what search results surfaced from them; verify prices in each console before launch.
+
+### 6.1 Google Places API (New) — Phase 2
+
+- **Pricing.** Billed per request at the highest SKU among requested fields. `rating` and `userRatingCount` are **Enterprise** ($20/1,000 after 1,000 free per month). Requesting `reviews` bumps it to **Enterprise + Atmosphere** ($25/1,000 after 1,000 free). Since March 2025 the free allowance is per SKU, not a $200 credit.
+- **Our load:** 8 companies × weekly ≈ 35 calls/month → **$0** (well inside 1,000 free). A billing account with a card is still required.
+- **Place IDs** come from a Text Search with an IDs-only field mask (free, unlimited). The place ID is the one thing Google lets us store indefinitely.
+- **Limits that affect your metrics:**
+  - Place Details returns **at most 5 reviews, sorted by relevance**. The New API has **no "newest" sort** (that was the legacy API). So **"date of newest review" cannot be read reliably from Places.** The best Places can give is "newest of the 5 most relevant", which will often be months stale.
+  - Reviews carry **no owner-reply field**. Response rate is only available to the listing owner via the Business Profile API. So **owner response rate stays manual** for competitors.
+- **Storage terms (important).** Google's terms allow caching Content for up to 30 days; only place IDs are exempt. A weekly history of ratings and review counts kept longer than 30 days is, read strictly, outside that. Rank-tracking and reputation tools do store this routinely, but I want you to choose knowingly. See decision 7 below.
+
+### 6.2 Google PageSpeed Insights API v5 — Phase 2
+
+- **Free**, API key recommended for automated use, default quota roughly 25,000 queries/day. No storage restrictions. Our load is ~35 to 70 runs/month.
+- Fields: `lighthouseResult.categories.performance.score` (0 to 1, we store ×100) for mobile and desktop; `loadingExperience` holds real-user Core Web Vitals but is often absent for low-traffic local sites, so the collector stores it in `raw` when present and never depends on it.
+
+### 6.3 Yelp — manual, permanently
+
+- Yelp's API is subscription-only: **$229/month minimum** (Base), 30-day trial, no free tier.
+- Terms forbid storing Yelp content for **more than 24 hours** (business IDs excepted). A weekly history is not permitted.
+- **Recommendation:** Yelp rating, count, and response rate stay `manual`. I've updated the metrics table accordingly; the "Later: Yelp API" row in your brief should be dropped.
+
+### 6.4 Meta (Instagram, Facebook) — Phase 4
+
+- **Instagram competitors: feasible.** The Graph API's `business_discovery` field returns a public Business/Creator account's `followers_count`, `media_count`, and recent media with timestamps. It needs the **Facebook Login** flavor of the Instagram API, using **EVG's own Instagram professional account linked to a Facebook Page** as the token holder. Used that way (only people with roles on the app), it runs under **Standard Access with no App Review**. All eight companies' Instagram accounts appear to be business accounts. Rate limit is 200 calls/hour, irrelevant at our volume.
+- **Facebook Page competitors: assume no.** Reading other Pages' follower counts and posts needs Page Public Content/Metadata Access, which requires Business Verification plus App Review, and reports describe slow approvals and frequent rejections for competitor monitoring. **Facebook metrics stay manual.**
+- A client connecting their **own** accounts (for their own column) is straightforward with standard permissions.
+
+### 6.5 Houzz — manual, permanently
+
+Houzz has no public API for professional profiles or reviews. Confirmed; stays manual.
+
+### 6.6 Netlify functions
+
+- Scheduled functions: all plans including Free, **30-second limit**, run only on the production deploy. Background functions: **15-minute limit**, available on credit-based Free. Hence the enqueue-then-background design in §2.
+- Free plan is 300 credits/month with a hard cap (deploys 15 credits each, compute 10 credits/GB-hour). Our functions cost roughly 1 credit/month; deploys are the thing to watch. If the cap is hit, the scheduled job stops too.
+
+### 6.7 Supabase
+
+- Magic link auth is on the Free plan. **But** the built-in mailer sends only to your organization's team members and is limited to **2 emails per hour**. The three EVG admins would need to be Supabase org members just to receive links. So **custom SMTP is required before anyone else logs in**. I propose Resend (free tier, verified sending domain such as `app.evergreenbranding.co`) and will confirm its current limits when we set it up.
+- Free projects are **paused after 7 days of low activity** and a weekly job alone may not count. Mitigation: a tiny daily Netlify scheduled function that touches the database. Alternative: Supabase Pro at $25/month, which never pauses. Recommendation: Free plus the daily ping for the demo, Pro when it becomes client-facing.
+
+### 6.8 SERP provider (the one paid API) — your choice needed
+
+Usage profile for RCH: 15 queries weekly ≈ 65 searches/month, plus up to 8 manual refreshes of all 15 ≈ 120, so **~200 searches/month**, desktop, one location. All of the serious providers return the local pack (3-pack) **inside** the normal Google result, so no second call is needed unless we later want the full Maps list. Scaling case: three clients at 50 queries each ≈ 1,000/month.
+
+| Provider | Pricing model | Free tier | Cost at ~200/mo | Cost at ~1,000/mo | Local pack in same call | City + device | ID for matching GBP | Node SDK |
+|---|---|---|---|---|---|---|---|---|
+| **DataForSEO** | Pay as you go, $50 minimum top-up, balance never expires | $1 trial | **~$0.40** | ~$2 | Yes | Yes, desktop and mobile | place_id + cid | Official TypeScript client |
+| **SerpApi** | Subscription, no overage | 250 searches/mo | **$0** on free plan | $25 to $75 | Yes | Yes, desktop/mobile/tablet | place_id | Official `serpapi` npm |
+| Serper.dev | Prepaid credits, $50 min, **expire after 6 months** | 2,500 one-time | ~$0.20 (free credits last ~1 yr) | ~$1 | Yes | Location yes, **no device param** | cid | REST only |
+| Bright Data | Pay as you go, no minimum | 5,000/mo shared across their products | $0 | $0 | Yes | Yes | cid | Official SDK, heavier account setup |
+| SearchApi.io | Subscription | 100 one-time | $40 | $40 | Yes | Yes | place_id | REST |
+| Scale SERP | Subscription | 125/mo | $23 | $23+ | Separate call | Yes | data_cid | REST |
+| HasData | Subscription | ~100 SERPs/mo | $49 | $49 | Yes | Yes | placeId | Official (legacy name) |
+| Apify Google Search actor | Pay per event | $5/mo credit | ~$0 | ~$2 | Partial, IDs unverified | Yes | ? | `apify-client` |
+
+Notes: all figures from today's search of the providers' pricing pages; the sandbox could not open the pages directly, so **confirm on the pricing page before buying**. On legal positioning: SerpApi markets a "Legal US Shield" and a Google DMCA suit against it was dismissed in July 2026 with leave to amend; SearchApi offers legal cover on its Production plan; DataForSEO's terms put indemnity on the customer; Serper offers no shield. Apify's product is a scraper actor with minutes of latency, so I've excluded it.
+
+**My recommendation: DataForSEO, Live Advanced endpoint.** Lowest real cost by far, place_id and cid in the local pack for exact Google Business Profile matching, desktop and mobile, an official TypeScript client, and a $50 balance that never expires (at our volume it lasts years). Runner-up: **SerpApi** on its free 250/month plan, which is $0 today but sits exactly at our volume; one extra client or a few extra refreshes pushes it to $25/month, and the free plan throttles to 50 searches/hour. Either provider also sells a Google Maps Reviews endpoint, which is the "Option B" in decision 8 below.
+
+The collector is written against a `SerpProvider` adapter interface, so switching providers later is one new file in `netlify/lib/serp/`.
+
+### Additional decisions this raises
+
+| # | Decision | My recommendation |
+|---|---|---|
+| 7 | Store Google Places ratings/counts beyond 30 days? | **Option A:** store them like every other snapshot and accept the terms gray area, documented in the repo. **Option B:** keep Places-sourced values on a rolling 30-day window and take long-run rating history from the SERP provider's local-pack results, which already include rating and review count for the three local-pack entries, and from manual monthly entries. I lean **A** for the demo and want your call, since EVG's name is on the audit. |
+| 8 | "Date of newest review" and "owner response rate" for Google | Places cannot supply these reliably. **Option A:** both stay `manual` (my default). **Option B:** SERP providers such as SerpApi and DataForSEO also sell a Google Maps Reviews endpoint that returns reviews newest-first *with* owner replies, which would automate both metrics for all eight companies at roughly the same per-call price as a search. It is the same kind of product as the SERP API you've already accepted, but it is Google Maps data obtained outside Google's own API, so I'm flagging it against your "no scraping" rule rather than deciding for you. |
 
 ---
 
@@ -230,6 +299,6 @@ All colors, type scale, radii and spacing live in `src/theme/tokens.css` as CSS 
 | 1 Foundation | Supabase project + migrations + RLS, magic-link auth with invites, Settings (companies, profiles, queries, users), Data entry, Scorecard, metric catalog seed, RCH seed | You can log in, fill in manual data for 8 companies, and see the scorecard with staleness and deltas. |
 | 2 Collectors | `google_places`, `pagespeed`, `serp` (your chosen provider), background run pipeline, weekly schedule, Refresh now with cooldown, Search view | The "done" state in your brief. |
 | 3 Reports | Company detail with trend lines, report generation (frozen), PDF / CSV / PNG exports | Audit evidence pack. |
-| 4 Later | Client logins (flip `client_access_enabled`), Yelp + Meta collectors, actions, client theming | Client-facing deliverable. |
+| 4 Later | Client logins (flip `client_access_enabled`), Instagram collector, actions, client theming | Client-facing deliverable. |
 
 ---
