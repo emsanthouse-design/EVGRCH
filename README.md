@@ -32,7 +32,7 @@ Netlify functions run locally with `npx netlify dev` (needs the Netlify CLI and 
 
 Browser (public, prefixed `VITE_`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (the `sb_publishable_…` key).
 
-Functions only (never shipped to the browser): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+Functions only (never shipped to the browser): `SUPABASE_URL`, `SUPABASE_ADMIN_KEY`,
 `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `GOOGLE_MAPS_API_KEY`, `PAGESPEED_API_KEY`.
 
 ### Supabase one-time setup (dashboard)
