@@ -1,0 +1,45 @@
+-- 0003_seed_metrics: the metric catalog. Editable later in Settings.
+insert into metrics (key, label, area, platform, unit, value_type, direction, source, collector_key, display_weight, help_text, sort_order) values
+-- Reviews: recency and responsiveness first, rating second
+('google_newest_review_date', 'Newest Google review',       'reviews', 'google', null,      'date',    'higher_better', 'manual', null,            'primary',   'Date of the most recent review on the Google Business Profile.', 10),
+('google_response_rate',      'Google owner response rate', 'reviews', 'google', '%',       'percent', 'higher_better', 'manual', null,            'primary',   'Share of the 10 most recent Google reviews with an owner reply.', 11),
+('google_rating',             'Google rating',              'reviews', 'google', 'stars',   'number',  'higher_better', 'api',    'google_places', 'secondary', null, 12),
+('google_review_count',       'Google reviews',             'reviews', 'google', 'reviews', 'integer', 'higher_better', 'api',    'google_places', 'secondary', null, 13),
+('yelp_newest_review_date',   'Newest Yelp review',         'reviews', 'yelp',   null,      'date',    'higher_better', 'manual', null,            'primary',   null, 20),
+('yelp_response_rate',        'Yelp owner response rate',   'reviews', 'yelp',   '%',       'percent', 'higher_better', 'manual', null,            'primary',   'Share of the 10 most recent Yelp reviews with an owner reply.', 21),
+('yelp_rating',               'Yelp rating',                'reviews', 'yelp',   'stars',   'number',  'higher_better', 'manual', null,            'secondary', null, 22),
+('yelp_review_count',         'Yelp reviews',               'reviews', 'yelp',   'reviews', 'integer', 'higher_better', 'manual', null,            'secondary', null, 23),
+('houzz_newest_review_date',  'Newest Houzz review',        'reviews', 'houzz',  null,      'date',    'higher_better', 'manual', null,            'primary',   null, 30),
+('houzz_response_rate',       'Houzz owner response rate',  'reviews', 'houzz',  '%',       'percent', 'higher_better', 'manual', null,            'primary',   'Share of the 10 most recent Houzz reviews with an owner reply.', 31),
+('houzz_rating',              'Houzz rating',               'reviews', 'houzz',  'stars',   'number',  'higher_better', 'manual', null,            'secondary', null, 32),
+('houzz_review_count',        'Houzz reviews',              'reviews', 'houzz',  'reviews', 'integer', 'higher_better', 'manual', null,            'secondary', null, 33),
+-- Listings checklist, per platform
+('listing_claimed_google',    'Google profile claimed',     'listings', 'google',   null, 'boolean', 'higher_better', 'manual', null, 'primary', 'Is the Google Business Profile verified and owner-managed?', 10),
+('listing_name_ok_google',    'Google name correct',        'listings', 'google',   null, 'boolean', 'higher_better', 'manual', null, 'primary', 'Business name matches the brand exactly.', 11),
+('listing_contact_ok_google', 'Google contact correct',     'listings', 'google',   null, 'boolean', 'higher_better', 'manual', null, 'primary', 'Phone, address and website are current.', 12),
+('listing_claimed_yelp',      'Yelp profile claimed',       'listings', 'yelp',     null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 20),
+('listing_name_ok_yelp',      'Yelp name correct',          'listings', 'yelp',     null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 21),
+('listing_contact_ok_yelp',   'Yelp contact correct',       'listings', 'yelp',     null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 22),
+('listing_claimed_houzz',     'Houzz profile claimed',      'listings', 'houzz',    null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 30),
+('listing_name_ok_houzz',     'Houzz name correct',         'listings', 'houzz',    null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 31),
+('listing_contact_ok_houzz',  'Houzz contact correct',      'listings', 'houzz',    null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 32),
+('listing_claimed_facebook',  'Facebook page claimed',      'listings', 'facebook', null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 40),
+('listing_name_ok_facebook',  'Facebook name correct',      'listings', 'facebook', null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 41),
+('listing_contact_ok_facebook','Facebook contact correct',  'listings', 'facebook', null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 42),
+('listing_claimed_bbb',       'BBB profile claimed',        'listings', 'bbb',      null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 50),
+('listing_name_ok_bbb',       'BBB name correct',           'listings', 'bbb',      null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 51),
+('listing_contact_ok_bbb',    'BBB contact correct',        'listings', 'bbb',      null, 'boolean', 'higher_better', 'manual', null, 'primary', null, 52),
+-- Social: cadence first, followers smaller
+('ig_posts_30d',              'Instagram posts, last 30 days', 'social', 'instagram', 'posts',     'integer', 'higher_better', 'manual', null, 'primary',   'Count feed posts and reels published in the last 30 days.', 10),
+('ig_last_post_date',         'Instagram last post',           'social', 'instagram', null,        'date',    'higher_better', 'manual', null, 'primary',   null, 11),
+('ig_followers',              'Instagram followers',           'social', 'instagram', 'followers', 'integer', 'higher_better', 'manual', null, 'secondary', null, 12),
+('fb_posts_30d',              'Facebook posts, last 30 days',  'social', 'facebook',  'posts',     'integer', 'higher_better', 'manual', null, 'primary',   null, 20),
+('fb_last_post_date',         'Facebook last post',            'social', 'facebook',  null,        'date',    'higher_better', 'manual', null, 'primary',   null, 21),
+('fb_followers',              'Facebook followers',            'social', 'facebook',  'followers', 'integer', 'higher_better', 'manual', null, 'secondary', null, 22),
+-- Website
+('mobile_performance_score',  'Mobile performance score',   'website', null, '/100', 'score',   'higher_better', 'api',    'pagespeed', 'primary', 'PageSpeed Insights mobile performance, 0 to 100.', 10),
+('homepage_lead_message',     'Homepage lead message',      'website', null, null,   'text',    'neutral',       'manual', null,        'primary', 'The first headline a visitor reads. Quote it.', 20),
+('visible_inquiry_path',      'Visible inquiry path',       'website', null, null,   'boolean', 'higher_better', 'manual', null,        'primary', 'Is there an obvious way to start a project inquiry above the fold?', 21),
+('pricing_shown',             'Pricing shown',              'website', null, null,   'boolean', 'neutral',       'manual', null,        'primary', 'Does the site state any pricing or budget guidance?', 22),
+-- Search (derived from SERP captures in Phase 2)
+('branded_top_result_owner',  'Top result for branded searches', 'search', 'google', null, 'text', 'neutral', 'api', 'serp', 'primary', 'Who holds position 1 on the client''s branded queries.', 10);
