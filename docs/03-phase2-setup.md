@@ -10,7 +10,7 @@ deploy from a linked repository.
 
 1. Netlify → evg-presence-tracker → Project configuration → Build & deploy → Continuous deployment
    → **Link repository** → GitHub → `emsanthouse-design/EVGRCH`.
-2. Production branch: `claude/competitive-presence-tracker-qeg7ek` (until we merge to main).
+2. Production branch: `main` (Netlify's default; the code is published there).
 3. Build command and publish directory are read from `netlify.toml`; leave the fields as suggested.
 4. Save. Netlify builds and deploys on every push from now on. First build takes 2 to 3 minutes.
 
