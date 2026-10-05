@@ -270,14 +270,14 @@ export function useRunStatus(workspaceId: string | undefined) {
 export function useRefreshNow(workspaceId: string | undefined) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (collectors: string[] = []) => {
       const { data: s } = await supabase.auth.getSession()
       const token = s.session?.access_token
       if (!token) throw new Error('Not signed in')
       const res = await fetch('/api/refresh', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workspaceId }),
+        body: JSON.stringify({ workspaceId, collectors }),
       })
       const body = (await res.json().catch(() => ({}))) as { error?: string; runId?: string }
       if (!res.ok) throw new Error(body.error ?? `Refresh failed (HTTP ${res.status})`)

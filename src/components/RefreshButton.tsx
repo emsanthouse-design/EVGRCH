@@ -36,10 +36,21 @@ export function RefreshButton({ workspaceId }: { workspaceId: string }) {
       )}
       {refresh.error && <span className="text-xs text-negative">{refresh.error.message}</span>}
       {isAdmin && (
-        <Button size="sm" disabled={active || refresh.isPending} onClick={() => refresh.mutate()} title="Re-run the API collectors for this workspace">
-          <RefreshCw size={14} className={active ? 'animate-spin' : ''} />
-          {active ? 'Refreshing…' : 'Refresh now'}
-        </Button>
+        <>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={active || refresh.isPending}
+            onClick={() => refresh.mutate(['google_places', 'pagespeed'])}
+            title="Re-run only the Google collectors (ratings, site speed). Uses no search credits and ignores the cooldown."
+          >
+            Google only
+          </Button>
+          <Button size="sm" disabled={active || refresh.isPending} onClick={() => refresh.mutate([])} title="Re-run every collector, including search rankings (one search credit per query)">
+            <RefreshCw size={14} className={active ? 'animate-spin' : ''} />
+            {active ? 'Refreshing…' : 'Refresh now'}
+          </Button>
+        </>
       )}
     </div>
   )
