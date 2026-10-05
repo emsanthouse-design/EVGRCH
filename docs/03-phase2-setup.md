@@ -45,8 +45,8 @@ a Netlify variable change: set `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` and 
 
 ## 3. First run
 
-1. After the keys are saved, trigger a redeploy (Deploys → Trigger deploy → Deploy site) so the
-   functions pick up the new variables.
+1. **After adding or changing any environment variable, redeploy.** Netlify functions only read
+   variables at deploy time. Deploys → Trigger deploy → Deploy project, wait for Published.
 2. Open the app → Scorecard → **Refresh now**. The button spins while the run works (1 to 3 minutes).
 3. When it finishes, the status line under the button says `succeeded`, `partial` (some errors, hover
    to read them) or `failed`.
