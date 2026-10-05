@@ -83,6 +83,8 @@ export function SearchPage() {
                     const top = rows.find((r) => r.result_type === 'organic' && r.position === 1)
                     const topCo = top?.matched_company_id ? cos.find((c) => c.id === top.matched_company_id) : null
                     const ads = rows.filter((r) => r.result_type === 'ad')
+                    const panel = rows.find((r) => r.result_type === 'other' && r.position === 0)
+                    const panelCo = panel?.matched_company_id ? cos.find((c) => c.id === panel.matched_company_id) : null
                     return (
                       <Fragment key={q.id}>
                         <tr className="border-b border-border/70 hover:bg-surface-muted/40">
@@ -95,6 +97,11 @@ export function SearchPage() {
                               {q.is_branded && <Badge tone="client">Branded</Badge>}
                               {rows.some((r) => r.result_type === 'local_pack') && <Badge tone="info">Local pack</Badge>}
                               {ads.length > 0 && <Badge tone="warning">{ads.length} {ads.length === 1 ? 'ad' : 'ads'}</Badge>}
+                              {panel && (
+                                <Badge tone={panelCo?.is_client ? 'client' : 'neutral'} className="max-w-56 truncate" title={panel.title ?? undefined}>
+                                  Panel: {panelCo ? (panelCo.short_name ?? panelCo.name) : (panel.title ?? '').replace(/^Knowledge panel: /, '')}
+                                </Badge>
+                              )}
                               {rows.length === 0 && <span className="text-[11px] text-text-faint">not captured yet</span>}
                             </div>
                           </td>
@@ -170,7 +177,7 @@ function RankCell({ company, rows, prevRows }: { company: CompanyWithProfiles; r
 
 function ResultList({ rows, companies }: { rows: SerpResultView[]; companies: CompanyWithProfiles[] }) {
   const sections: [string, SerpResultView[]][] = [
-    ['Ads', rows.filter((r) => r.result_type === 'ad')],
+    ['Knowledge panel & ads', rows.filter((r) => r.result_type === 'ad' || r.result_type === 'other')],
     ['Local pack', rows.filter((r) => r.result_type === 'local_pack')],
     ['Organic', rows.filter((r) => r.result_type === 'organic')],
   ]

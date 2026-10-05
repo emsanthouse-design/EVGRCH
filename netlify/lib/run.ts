@@ -63,7 +63,7 @@ export async function runCollection(admin: AdminClient, runId: string, env: (k: 
         },
       }
       const allowedKeys = new Set(mine.map((m) => m.key))
-      await mapLimit(cos, 3, async (company) => {
+      await mapLimit(cos, collector.key === 'pagespeed' ? 1 : 3, async (company) => {
         if (!collector.canRun(company)) {
           s.skipped!.push(company.name)
           return
@@ -100,7 +100,7 @@ export async function runCollection(admin: AdminClient, runId: string, env: (k: 
           name: c.name,
           website_domain: c.website_domain,
           extra_domains: c.extra_domains,
-          company_profiles: c.company_profiles.map((p) => ({ platform: p.platform, url: p.url, external_id: p.external_id, handle: p.handle })),
+          company_profiles: c.company_profiles.map((p) => ({ platform: p.platform, url: p.url, alt_urls: p.alt_urls, external_id: p.external_id, handle: p.handle })),
         }))
         const client = cos.find((c) => c.is_client)
         const brandedOwners: string[] = []

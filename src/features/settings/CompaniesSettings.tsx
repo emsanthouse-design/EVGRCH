@@ -222,8 +222,19 @@ function CompanyEditor({ company, onClose }: { company: CompanyWithProfiles | nu
                     url={p?.url ?? ''}
                     handle={p?.handle ?? ''}
                     externalId={p?.external_id ?? ''}
+                    altUrls={(p?.alt_urls ?? []).join(', ')}
                     notes={p?.notes ?? ''}
-                    onSave={(v) => upsertProfile.mutate({ company_id: live.id, platform, url: v.url || null, handle: v.handle || null, external_id: v.externalId || null, notes: v.notes || null })}
+                    onSave={(v) =>
+                      upsertProfile.mutate({
+                        company_id: live.id,
+                        platform,
+                        url: v.url || null,
+                        handle: v.handle || null,
+                        external_id: v.externalId || null,
+                        alt_urls: v.altUrls.split(',').map((u) => u.trim()).filter(Boolean),
+                        notes: v.notes || null,
+                      })
+                    }
                     onClear={p ? () => deleteProfile.mutate(p.id) : undefined}
                   />
                 )
@@ -242,6 +253,7 @@ function ProfileRowEditor({
   url,
   handle,
   externalId,
+  altUrls,
   notes,
   onSave,
   onClear,
@@ -250,12 +262,13 @@ function ProfileRowEditor({
   url: string
   handle: string
   externalId: string
+  altUrls: string
   notes: string
-  onSave: (v: { url: string; handle: string; externalId: string; notes: string }) => void
+  onSave: (v: { url: string; handle: string; externalId: string; altUrls: string; notes: string }) => void
   onClear?: () => void
 }) {
-  const [v, setV] = useState({ url, handle, externalId, notes })
-  const dirty = v.url !== url || v.handle !== handle || v.externalId !== externalId || v.notes !== notes
+  const [v, setV] = useState({ url, handle, externalId, altUrls, notes })
+  const dirty = v.url !== url || v.handle !== handle || v.externalId !== externalId || v.altUrls !== altUrls || v.notes !== notes
   return (
     <div className="rounded-md border border-border p-3">
       <div className="flex items-center justify-between mb-2">
@@ -280,6 +293,7 @@ function ProfileRowEditor({
         <Input placeholder="Profile URL" value={v.url} onChange={(e) => setV({ ...v, url: e.target.value.trim() })} className="mt-0" />
         <Input placeholder="Handle / name" value={v.handle} onChange={(e) => setV({ ...v, handle: e.target.value })} className="mt-0" />
         <Input placeholder="External ID" value={v.externalId} onChange={(e) => setV({ ...v, externalId: e.target.value.trim() })} className="mt-0 font-mono text-xs" />
+        <Input placeholder="Other URLs for this company on this platform (duplicates, old slugs), comma-separated" value={v.altUrls} onChange={(e) => setV({ ...v, altUrls: e.target.value })} className="mt-0 sm:col-span-3" />
         <Input placeholder="Notes (e.g. duplicate profile exists)" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} className="mt-0 sm:col-span-3" />
       </div>
     </div>

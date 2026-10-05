@@ -16,6 +16,7 @@ interface SerpApiResponse {
     | { places?: SerpApiPlace[]; more_locations_link?: string }
     | SerpApiPlace[]
   ads?: { position?: number; block_position?: string; title?: string; link?: string; displayed_link?: string; tracking_link?: string }[]
+  knowledge_graph?: { title?: string; type?: string; website?: string; rating?: number; review_count?: number; reviews?: number; place_id?: string; address?: string }
 }
 interface SerpApiPlace {
   position: number
@@ -83,6 +84,22 @@ export function parseSerpApi(json: SerpApiResponse, meta: { location: string; de
     out.push({ resultType: 'ad', position: a.position ?? i + 1, title: a.title ?? null, url: link, domain: normalizeDomain(a.link ?? a.displayed_link) })
   })
 
+  // Knowledge panel (branded searches): recorded as an 'other' result at position 0 so the
+  // Search view can show whose panel Google displays for the query.
+  const kg = json.knowledge_graph
+  if (kg?.title) {
+    out.push({
+      resultType: 'other',
+      position: 0,
+      title: `Knowledge panel: ${kg.title}`,
+      url: kg.website ?? null,
+      domain: normalizeDomain(kg.website),
+      placeId: kg.place_id ?? null,
+      rating: kg.rating ?? null,
+      reviewCount: kg.review_count ?? kg.reviews ?? null,
+    })
+  }
+
   return {
     provider: 'serpapi',
     location: meta.location,
@@ -97,6 +114,7 @@ export function parseSerpApi(json: SerpApiResponse, meta: { location: string; de
       organic_results: organic,
       local_results: places,
       ads,
+      knowledge_graph: kg ? { title: kg.title, type: kg.type, website: kg.website, rating: kg.rating, review_count: kg.review_count ?? kg.reviews, address: kg.address } : null,
     },
   }
 }

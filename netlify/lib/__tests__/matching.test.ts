@@ -9,7 +9,13 @@ const companies: MatchableCompany[] = [
     extra_domains: ['rchconco.com'],
     company_profiles: [
       { platform: 'google', url: null, external_id: '123456', handle: 'RCH Construction, Inc.' },
-      { platform: 'houzz', url: 'https://www.houzz.com/professionals/general-contractors/rch-construction-inc-pfvwus-pf~1104226863', external_id: null, handle: null },
+      {
+        platform: 'houzz',
+        url: 'https://www.houzz.com/professionals/general-contractors/rch-construction-inc-pfvwus-pf~1104226863',
+        alt_urls: ['https://www.houzz.com/professionals/home-builders/rch-construction-inc-pfvwus-pf~1704615005'],
+        external_id: null,
+        handle: null,
+      },
     ],
   },
   {
@@ -51,6 +57,15 @@ describe('matchCompany', () => {
     expect(
       matchCompany({ resultType: 'organic', url: 'https://www.houzz.com/professionals/general-contractors/rch-construction-inc-pfvwus-pf~1104226863/' }, companies),
     ).toEqual({ companyId: 'rch', kind: 'third_party_profile' })
+  })
+  it('matches an alternate (duplicate) profile URL', () => {
+    expect(matchCompany({ resultType: 'organic', url: 'https://www.houzz.com/professionals/home-builders/rch-construction-inc-pfvwus-pf~1704615005' }, companies)).toEqual({
+      companyId: 'rch',
+      kind: 'third_party_profile',
+    })
+  })
+  it('does not match a same-named business on a different Facebook page', () => {
+    expect(matchCompany({ resultType: 'organic', url: 'https://www.facebook.com/pages/RCH-Construction-LLC/593990154000901', title: 'RCH Construction LLC - Home' }, companies)).toBeNull()
   })
   it('does not match a different Houzz profile', () => {
     expect(matchCompany({ resultType: 'organic', url: 'https://www.houzz.com/professionals/home-builders/h2-builders-pfvwus-pf~345614621' }, companies)).toBeNull()

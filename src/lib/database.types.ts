@@ -153,6 +153,7 @@ export type Database = {
       }
       company_profiles: {
         Row: {
+          alt_urls: string[]
           company_id: string
           external_id: string | null
           handle: string | null
@@ -163,6 +164,7 @@ export type Database = {
           verified_at: string | null
         }
         Insert: {
+          alt_urls?: string[]
           company_id: string
           external_id?: string | null
           handle?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           verified_at?: string | null
         }
         Update: {
+          alt_urls?: string[]
           company_id?: string
           external_id?: string | null
           handle?: string | null

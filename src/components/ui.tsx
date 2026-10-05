@@ -27,9 +27,10 @@ export function Card({ children, className, title, actions }: { children: ReactN
   )
 }
 
-export function Badge({ children, tone = 'neutral', className }: { children: ReactNode; tone?: 'neutral' | 'positive' | 'negative' | 'warning' | 'info' | 'client' | 'benchmark'; className?: string }) {
+export function Badge({ children, tone = 'neutral', className, title }: { children: ReactNode; tone?: 'neutral' | 'positive' | 'negative' | 'warning' | 'info' | 'client' | 'benchmark'; className?: string; title?: string }) {
   return (
     <span
+      title={title}
       className={clsx(
         'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-4 whitespace-nowrap',
         tone === 'neutral' && 'bg-surface-muted text-text-muted',

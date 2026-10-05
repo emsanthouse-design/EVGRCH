@@ -4,6 +4,7 @@ import { parseSerpApi } from '../serp/serpapi'
 const sample = {
   search_metadata: { id: 'abc', status: 'Success' },
   search_information: { total_results: 4210 },
+  knowledge_graph: { title: 'RCH Construction, Inc.', type: 'Construction company in Hilton Head Island, South Carolina', website: 'https://rchconstruction.com/', rating: 4.8, review_count: 27 },
   ads: [{ position: 1, block_position: 'top', title: 'HHI Builders | Remodeling', link: 'https://www.hhi-builders.com/landing', displayed_link: 'https://www.hhi-builders.com' }],
   local_results: {
     places: [
@@ -34,6 +35,8 @@ describe('parseSerpApi', () => {
     expect(local[1]).toMatchObject({ position: 2, placeId: '555', domain: null })
     const ads = cap.results.filter((r) => r.resultType === 'ad')
     expect(ads[0]).toMatchObject({ position: 1, domain: 'hhi-builders.com' })
+    const kg = cap.results.find((r) => r.resultType === 'other')
+    expect(kg).toMatchObject({ position: 0, domain: 'rchconstruction.com', rating: 4.8, reviewCount: 27 })
   })
   it('accepts local_results as a bare array', () => {
     const cap = parseSerpApi({ organic_results: [], local_results: [{ position: 1, title: 'X', data_cid: '1' }] }, { location: 'x', device: 'desktop' })

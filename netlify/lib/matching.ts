@@ -31,7 +31,7 @@ export interface MatchableCompany {
   name: string
   website_domain: string | null
   extra_domains: string[]
-  company_profiles: { platform: string; url: string | null; external_id: string | null; handle: string | null }[]
+  company_profiles: { platform: string; url: string | null; alt_urls?: string[]; external_id: string | null; handle: string | null }[]
 }
 
 export interface MatchableResult {
@@ -95,12 +95,14 @@ export function matchCompany(result: MatchableResult, companies: MatchableCompan
     const target = canonicalPath(result.url)
     for (const c of companies) {
       for (const p of c.company_profiles) {
-        if (!p.url) continue
-        const pd = domainOfUrl(p.url)
-        if (!pd || !sameOrSubdomain(host, pd)) continue
-        const pp = canonicalPath(p.url)
-        if (pp && target && (target === pp || target.startsWith(pp + '/') || pp.startsWith(target + '/'))) {
-          return { companyId: c.id, kind: 'third_party_profile' }
+        for (const candidate of [p.url, ...(p.alt_urls ?? [])]) {
+          if (!candidate) continue
+          const pd = domainOfUrl(candidate)
+          if (!pd || !sameOrSubdomain(host, pd)) continue
+          const pp = canonicalPath(candidate)
+          if (pp && target && (target === pp || target.startsWith(pp + '/') || pp.startsWith(target + '/'))) {
+            return { companyId: c.id, kind: 'third_party_profile' }
+          }
         }
       }
     }
